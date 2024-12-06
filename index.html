@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Previsão do Tempo</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="weather-container">
+    <header class="weather-header">
+      <h1 id="regionTitle">Previsão do Tempo</h1>
+    </header>
+    <div class="weather-content">
+      <!-- Hoje -->
+      <div class="weather-today">
+        <h2>Hoje</h2>
+        <div class="weather-icon">
+          <img id="todayIcon" src="" alt="Ícone do clima">
+        </div>
+        <div class="weather-info">
+          <p class="temp">Temperatura: <span id="todayTemp">--</span>°C</p>
+          <p class="humidity">Umidade: <span id="todayHumidity">--</span>%</p>
+        </div>
+        <p id="description" class="legend"></p>
+      </div>
+      <!-- Previsão dos próximos dias -->
+      <div class="weather-forecast">
+        <h2>Próximos dias</h2>
+        <div id="forecastDays" class="forecast-list">
+          <!-- Forecast cards serão inseridos aqui -->
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="index.js"></script>
+</body>
+</html>
