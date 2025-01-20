@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const weatherContainer = document.querySelector(".weather-container");
     const loaderOverlay = document.querySelector(".loader-overlay");
 
-    const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${region}&units=metric&lang=pt&appid=${apiKey}`;
+    const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${region},BR&units=metric&lang=pt&appid=${apiKey}`;
 
     const fetchWeatherData = async () => {
         const spinner = document.getElementById("spinner");
@@ -49,6 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
         todayIcon.src = getWeatherIconUrl(todayData.weather[0].icon);
         description.textContent = todayData.weather[0].description;
         updateBackground(todayData.weather[0].main.toLowerCase());
+        console.log(todayData.weather[0].main.toLowerCase())
 
         forecastDays.innerHTML = "";
         const dailyForecasts = data.list.filter((_, index) => index % 8 === 0);
@@ -72,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const updateBackground = (weatherDescription) => {
         const backgroundImages = {
-            "clear": "url('images/sol.jpg')",
+            "clear": "url('images/sol.jpeg')",
             "clouds": "url('images/nublado.jpg')",
             "rain": "url('images/chuva.jpg')",
             "snow": "url('images/snow.jpg')",
