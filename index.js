@@ -2,7 +2,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const apiKey = "a25ec5ed353f435e61adde61f64e7303"; // Substitua por sua chave de API
 
     const urlParams = new URLSearchParams(window.location.search);
-    const region = urlParams.get('city') || "São Paulo";
+    const region = urlParams.get('city');
+    const state = urlParams.get('state');
+    const latitude = urlParams.get('latitude');
+    const longitude = urlParams.get('longitude');
+
+    let apiUrl = '';
 
     const regionTitle = document.getElementById("regionTitle");
     const todayTemp = document.getElementById("todayTemp");
@@ -13,7 +18,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const weatherContainer = document.querySelector(".weather-container");
     const loaderOverlay = document.querySelector(".loader-overlay");
 
-    const apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${region},BR&units=metric&lang=pt&appid=${apiKey}`;
+    if (latitude && longitude) {
+        apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&units=metric&lang=pt&appid=${apiKey}`;
+      } else if (region && state) {
+        apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${region},${state},BR&units=metric&lang=pt&appid=${apiKey}`;
+      } else if (region) {
+        apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${region},BR&units=metric&lang=pt&appid=${apiKey}`;
+      } else {
+        apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=São Paulo,BR&units=metric&lang=pt&appid=${apiKey}`;
+      }
 
     const fetchWeatherData = async () => {
         const spinner = document.getElementById("spinner");
@@ -42,7 +55,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     
     const updateWeather = (data) => {
-        regionTitle.textContent = `Previsão do Tempo - ${region}`;
+        const cityName = data.city.name;
+        regionTitle.textContent = `Previsão do Tempo - ${cityName}`;
         const todayData = data.list[0];
         todayTemp.textContent = Math.round(todayData.main.temp);
         todayHumidity.textContent = todayData.main.humidity;
