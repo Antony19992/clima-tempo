@@ -1,5 +1,5 @@
-document.addEventListener("DOMContentLoaded", () => {
-    const apiKey = "a25ec5ed353f435e61adde61f64e7303"; // Substitua por sua chave de API
+$(document).ready(function () {
+    const apiKey = "a25ec5ed353f435e61adde61f64e7303";
 
     const urlParams = new URLSearchParams(window.location.search);
     const region = urlParams.get('city');
@@ -7,105 +7,119 @@ document.addEventListener("DOMContentLoaded", () => {
     const latitude = urlParams.get('latitude');
     const longitude = urlParams.get('longitude');
 
-    let apiUrl = '';
+    const $regionTitle = $("#regionTitle");
+    const $todayTemp = $("#todayTemp");
+    const $todayHumidity = $("#todayHumidity");
+    const $todayIcon = $("#todayIcon");
+    const $description = $("#description");
+    const $forecastDays = $("#forecastDays");
+    const $weatherContainer = $(".weather-container");
+    const $spinner = $("#spinner");
 
-    const regionTitle = document.getElementById("regionTitle");
-    const todayTemp = document.getElementById("todayTemp");
-    const todayHumidity = document.getElementById("todayHumidity");
-    const todayIcon = document.getElementById("todayIcon");
-    const description = document.getElementById("description");
-    const forecastDays = document.getElementById("forecastDays");
-    const weatherContainer = document.querySelector(".weather-container");
-    const loaderOverlay = document.querySelector(".loader-overlay");
-
+    let apiUrl = "";
     if (latitude && longitude) {
         apiUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&units=metric&lang=pt&appid=${apiKey}`;
-      } else if (region && state) {
+    } else if (region && state) {
         apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${region},${state},BR&units=metric&lang=pt&appid=${apiKey}`;
-      } else if (region) {
+    } else if (region) {
         apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${region},BR&units=metric&lang=pt&appid=${apiKey}`;
-      } else {
+    } else {
         apiUrl = `https://api.openweathermap.org/data/2.5/forecast?q=São Paulo,BR&units=metric&lang=pt&appid=${apiKey}`;
-      }
+    }
 
-    const fetchWeatherData = async () => {
-        const spinner = document.getElementById("spinner");
-    
-        try {
-            // Mostra o spinner e esconde o conteúdo
-            spinner.style.display = "block";
-            weatherContainer.style.display = "none";
-    
-            const response = await fetch(apiUrl);
-            if (!response.ok) {
-                throw new Error(`Erro ao buscar dados: ${response.statusText}`);
-            }
-            const data = await response.json();
-    
-            // Atualiza os dados na tela
-            updateWeather(data);
-        } catch (error) {
-            console.error("Erro ao buscar dados da API:", error);
-            weatherContainer.innerHTML = "<p>Erro ao carregar dados. Tente novamente!</p>";
-        } finally {
-            // Esconde o spinner e mostra o conteúdo
-            spinner.style.display = "none";
-            weatherContainer.style.display = "block";
+    function fetchWeatherData() {
+        $spinner.show();
+        $weatherContainer.hide();
+
+        $.getJSON(apiUrl)
+            .done(updateWeather)
+            .fail((err) => {
+                console.error("Erro ao buscar dados da API:", err);
+                $weatherContainer.html("<p>Erro ao carregar dados. Tente novamente!</p>");
+            })
+            .always(() => {
+                $spinner.hide();
+                $weatherContainer.show();
+            });
+    }
+
+  function updateWeather(data) {
+    const cityName = data.city.name;
+    const now = new Date();
+    const todayData = data.list.find(item => {
+        const itemDate = new Date(item.dt_txt);
+        return itemDate.getDate() === now.getDate() && itemDate.getHours() === 12;
+    }) || data.list[0];
+
+    let iconCode = todayData.weather[0].icon;
+    const hourNow = now.getHours();
+    if (iconCode === '01n' && hourNow >= 7 && hourNow <= 18) {
+        iconCode = '01d'; 
+    }
+    $todayIcon.attr("src", getWeatherIconUrl(iconCode));
+
+    const mainWeather = todayData.weather[0].main.toLowerCase();
+    const desc = todayData.weather[0].description;
+    $regionTitle.text(`Previsão do Tempo - ${cityName}`);
+    $todayTemp.text(Math.round(todayData.main.temp));
+    $todayHumidity.text(todayData.main.humidity);
+    $description.text(capitalize(desc));
+    updateBackground(mainWeather);
+
+    $forecastDays.empty();
+    const dailyForecasts = data.list.filter((_, i) => i % 8 === 0);
+
+    dailyForecasts.forEach((forecast) => {
+        const forecastDate = new Date(forecast.dt_txt);
+        let forecastIconCode = forecast.weather[0].icon;
+
+        if (forecastIconCode === '01n' && hourNow >= 7 && hourNow <= 18) {
+            forecastIconCode = '01d';
         }
-    };
-    
-    const updateWeather = (data) => {
-        const cityName = data.city.name;
-        regionTitle.textContent = `Previsão do Tempo - ${cityName}`;
-        const todayData = data.list[0];
-        todayTemp.textContent = Math.round(todayData.main.temp);
-        todayHumidity.textContent = todayData.main.humidity;
-        todayIcon.src = getWeatherIconUrl(todayData.weather[0].icon);
-        const desc = todayData.weather[0].description;
-        description.textContent = desc.charAt(0).toUpperCase() + desc.slice(1).toLowerCase();
-        updateBackground(todayData.weather[0].main.toLowerCase());
-        console.log(todayData.weather[0].main.toLowerCase())
 
-        forecastDays.innerHTML = "";
-        const dailyForecasts = data.list.filter((_, index) => index % 8 === 0);
-        dailyForecasts.forEach((forecast) => {
-            const date = new Date(forecast.dt_txt).toLocaleDateString("pt-BR", { weekday: "long" });
-            const card = document.createElement("div");
-            card.className = "forecast-card";
-            card.innerHTML = `
-                <img src="${getWeatherIconUrl(forecast.weather[0].icon)}" alt="Ícone do clima">
+        const date = forecastDate.toLocaleDateString("pt-BR", { weekday: "long" });
+        const card = `
+            <div class="forecast-card">
+                <img src="${getWeatherIconUrl(forecastIconCode)}" alt="Ícone do clima">
                 <div>
-                    <p><strong>${date.charAt(0).toUpperCase()+date.slice(1)}</strong></p>
+                    <p><strong>${capitalize(date)}</strong></p>
                     <p>Temp: ${Math.round(forecast.main.temp)}°C</p>
                     <p>Umidade: ${forecast.main.humidity}%</p>
                 </div>
-            `;
-            forecastDays.appendChild(card);
-        });
-    };
+            </div>
+        `;
+        $forecastDays.append(card);
+    });
+}
 
-    const getWeatherIconUrl = (iconCode) => `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    function getWeatherIconUrl(iconCode) {
+        return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    }
 
-    const updateBackground = (weatherDescription) => {
-        const backgroundImages = {
-            "clear": "url('images/sol.jpeg')",
-            "clouds": "url('images/nublado.jpg')",
-            "rain": "url('images/chuva.jpg')",
-            "snow": "url('images/snow.jpg')",
-            "thunderstorm": "url('images/thunderstorm.jpg')",
-            "drizzle": "url('images/drizzle.jpg')",
-            "mist": "url('images/mist.jpg')",
+    function updateBackground(weather) {
+        const backgrounds = {
+            clear: "sol.jpeg",
+            clouds: "nublado.jpg",
+            rain: "chuva.jpg",
+            snow: "snow.jpg",
+            thunderstorm: "thunderstorm.jpg",
+            drizzle: "drizzle.jpg",
+            mist: "mist.jpg",
         };
 
-        if (backgroundImages[weatherDescription]) {
-            document.body.style.backgroundImage = backgroundImages[weatherDescription];
-        } else {
-            document.body.style.backgroundImage = "url('images/default.jpg')";
-        }
-        document.body.style.backgroundSize = "cover";
-        document.body.style.backgroundPosition = "center";
-        document.body.style.transition = "background-image 0.5s ease-in-out";
-    };
+        const bgImage = backgrounds[weather] || "default.jpg";
+
+        $("body").css({
+            backgroundImage: `url('images/${bgImage}')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            transition: "background-image 0.5s ease-in-out"
+        });
+    }
+
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    }
 
     fetchWeatherData();
 });
