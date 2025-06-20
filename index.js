@@ -61,7 +61,8 @@ document.addEventListener("DOMContentLoaded", () => {
         todayTemp.textContent = Math.round(todayData.main.temp);
         todayHumidity.textContent = todayData.main.humidity;
         todayIcon.src = getWeatherIconUrl(todayData.weather[0].icon);
-        description.textContent = todayData.weather[0].description;
+        const desc = todayData.weather[0].description;
+        description.textContent = desc.charAt(0).toUpperCase() + desc.slice(1).toLowerCase();
         updateBackground(todayData.weather[0].main.toLowerCase());
         console.log(todayData.weather[0].main.toLowerCase())
 
@@ -74,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
             card.innerHTML = `
                 <img src="${getWeatherIconUrl(forecast.weather[0].icon)}" alt="Ícone do clima">
                 <div>
-                    <p><strong>${date}</strong></p>
+                    <p><strong>${date.charAt(0).toUpperCase()+date.slice(1)}</strong></p>
                     <p>Temp: ${Math.round(forecast.main.temp)}°C</p>
                     <p>Umidade: ${forecast.main.humidity}%</p>
                 </div>
